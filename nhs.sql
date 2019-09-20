@@ -23,8 +23,8 @@ CREATE TABLE [GRN\EJing].[Unit_Record](
 ) ON [PRIMARY]
 
 
-
--- join reference tables and Unit_Record table to transform Unit_Record information in text format
+--Insight exploary example
+-- join reference tables to Unit_Record table which transform Unit_Record information to text format
 select a.Record_number,b.[SAS_name], b.[Description], c.[text] as [Response]
 into #Unit_Record_Transformed
 from [GRN\EJing].[Unit_Record] a left join [GRN\EJing].[SAS] b
@@ -33,7 +33,6 @@ left join [GRN\EJing].[Data_Item] c
 on a.Data_Item_id = c.id
 where [SAS_name] in ('AGE99','Sex','ALCF3')
 
---Insight exploary example
 
 select a.Record_number,
 a.Age_Band,
