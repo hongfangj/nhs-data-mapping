@@ -11,15 +11,15 @@ CREATE TABLE [GRN\EJing].[Data_Item](
 	[id] [int] IDENTITY(1,1) NOT NULL,
 	[value] [int] NOT NULL,
 	[text] [nvarchar](100) NULL,
-	[SAS_id] [int] NULL
+	[SAS_id] [int] --FOREIGN KEY REFERENCES SAS(Id)
 ) ON [PRIMARY]
 
 --create table Unit_Record for testfile. Data automated populated process is not impletemented, but could discuss the logic.
 CREATE TABLE [GRN\EJing].[Unit_Record](
 	[id] [int] IDENTITY(1,1) NOT NULL,
 	[Record_number] [int] NOT NULL,
-	[SAS_id] [int] NOT NULL,
-	[Data_Item_id] [int] NOT NULL
+	[SAS_id] [int] NOT NULL, -- FOREIGN KEY REFERENCES SAS[Id],
+	[Data_Item_id] [int] NOT NULL -- FOREIGN KEY REFERENCES [Data_Item_Id]
 ) ON [PRIMARY]
 
 
