@@ -1,67 +1,77 @@
-USE [Actuarial]
-GO
-
-/****** Object:  Table [GRN\EJing].[SAS]    Script Date: 19/09/2019 10:00:47 PM ******/
-SET ANSI_NULLS ON
-GO
-
-SET QUOTED_IDENTIFIER ON
-GO
-
+-- create table SAS for the SAS name list and import data (not automated)
 CREATE TABLE [GRN\EJing].[SAS](
 	[Id] [int] IDENTITY(1,1) NOT NULL,
-	[Name] [nvarchar](50) NOT NULL,
+	[SAS_Name] [nvarchar](50) NOT NULL,
 	[Description] [nvarchar](50) NULL,
 	[Population] [nvarchar](10) NULL
 ) ON [PRIMARY]
 
-GO
-
-USE [Actuarial]
-GO
-
-/****** Object:  Table [GRN\EJing].[Data_Item]    Script Date: 19/09/2019 10:07:36 PM ******/
-SET ANSI_NULLS ON
-GO
-
-SET QUOTED_IDENTIFIER ON
-GO
-
+-- create table Data_Item for the datalist and import data (not automated)
 CREATE TABLE [GRN\EJing].[Data_Item](
-	[id] [int] NOT NULL,
+	[id] [int] IDENTITY(1,1) NOT NULL,
 	[value] [int] NOT NULL,
 	[text] [nvarchar](100) NULL,
-	[SAS_id] [int] NULL,
- CONSTRAINT [PK_Data_Item] PRIMARY KEY CLUSTERED 
-(
-	[id] ASC
-)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON) ON [PRIMARY]
+	[SAS_id] [int] NULL
 ) ON [PRIMARY]
 
-GO
-
-
-
-USE [Actuarial]
-GO
-
-/****** Object:  Table [GRN\EJing].[Unit_Record]    Script Date: 19/09/2019 10:32:18 PM ******/
-SET ANSI_NULLS ON
-GO
-
-SET QUOTED_IDENTIFIER ON
-GO
-
+--create table Unit_Record for testfile. Data automated populated process is not impletemented, but could discuss the logic.
 CREATE TABLE [GRN\EJing].[Unit_Record](
-	[id] [int] NOT NULL,
+	[id] [int] IDENTITY(1,1) NOT NULL,
 	[Record_number] [int] NOT NULL,
 	[SAS_id] [int] NOT NULL,
-	[Data_Item_id] [int] NOT NULL,
- CONSTRAINT [PK_Unit_Record] PRIMARY KEY CLUSTERED 
-(
-	[id] ASC
-)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON) ON [PRIMARY]
+	[Data_Item_id] [int] NOT NULL
 ) ON [PRIMARY]
 
-GO
+
+
+-- join reference tables and Unit_Record table to transform Unit_Record information in text format
+select a.Record_number,b.[SAS_name], b.[Description], c.[text] as [Response]
+into #Unit_Record_Transformed
+from [GRN\EJing].[Unit_Record] a left join [GRN\EJing].[SAS] b
+on a.SAS_id=b.id
+left join [GRN\EJing].[Data_Item] c
+on a.Data_Item_id = c.id
+where [SAS_name] in ('AGE99','Sex','ALCF3')
+
+--Insight exploary example
+
+select a.Record_number,
+a.Age_Band,
+b.Sex,
+c.Response
+
+into #temp
+from 
+(select Record_number,[Response] as Age_band
+
+From  Unit_Record_Transformed
+where [SAS_name]='AGE99'
+) as a
+left join 
+  (select Record_number,[Response] as Sex
+
+From  Unit_Record_Transformed
+where [SAS_name]='Sex'
+) as b
+on a.Record_number = b.Record_number
+
+left join 
+ (select Record_number,[Response] as Response
+From  [Unit_Record_Transformed
+where [SAS_name]='ALCF3' --Frequency of consuming 3 or more drinks a day in the last 12 months, which applies to persons 15 years and over
+) as c
+on a.Record_number = c.Record_number
+
+select Age_band,
+Sex,
+Response,
+Count(Record_number) as cnt
+from #temp
+group by 
+Age_band,
+Sex,
+Response
+
+--The above summary information could be analysed in R, e.g. ggplot2 to show the distribution in graph, or Pivot table or graph in Power BI or Excel.
+
 
